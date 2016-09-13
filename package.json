@@ -1,0 +1,23 @@
+{
+  "name": "node-linux-wifi",
+  "version": "0.0.1",
+  "description": "Library for handling WiFi scanning and connections in Linux",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlaanderson/node-linux-wifi.git"
+  },
+  "keywords": [
+    "WiFi",
+    "Linux"
+  ],
+  "author": "Michael Anderson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mlaanderson/node-linux-wifi/issues"
+  },
+  "homepage": "https://github.com/mlaanderson/node-linux-wifi#readme"
+}
