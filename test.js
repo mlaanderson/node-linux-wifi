@@ -19,7 +19,7 @@ wifi.on('scan_complete', (aps) => {
     console.log("");
     console.log("Access Points:");
     for (var name in aps) {
-            console.log("\t" + name, (100 * aps[name].linkQuality).toFixed(1) + "%", aps[name].level + " dBm");
+        console.log("\t" + name, (100 * aps[name].linkQuality).toFixed(1) + "%", aps[name].level + " dBm");
     }
 });
 

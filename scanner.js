@@ -133,7 +133,7 @@ class Scanner extends EventEmitter {
     startScan() {
         var errorString = "";
         var scanResults = "";
-        var scanner = spawn('sudo', ['iwlist', this._interface, 'scanning']);
+        var scanner = spawn('iwlist', [this._interface, 'scanning']);
         scanner.stdout.on('data', (data) => { scanResults += data.toString(); });
         scanner.stderr.on('data', (data) => { errorString += data.toString(); });
         scanner.on('close', (function(code) {

@@ -9,74 +9,70 @@ class Network extends EventEmitter {
     }
 
     /**
-     * Writes a configuration to /etc/wpa_supplicant/wpa_supplicant.conf
+     * Calculates the WPA key from a passphrase string
      * 
-     * @param {any} config
-     * @param {any} callback
+     * @param {string} passphrase
+     * @returns
      * 
      * @memberOf Network
      */
-    writeConfig(config, callback) {
-        fs.mkdtemp('/tmp/wifi-', (errMkdTemp, folder) => {
-            if (errMkdTemp) {
-                callback(errMkdTemp);
-            } else {
-                var reHexPSK = /^[0-9a-f]{64}$/;
-                var sout = fs.createWriteStream(folder + '/wpa_supplicant.conf');
-                for (var key in config) {
-                    if (key != 'networks') {
-                        sout.write(key + "=" + config[key] + "\n");
-                    }
-                }
-                for (var ssid in config.networks) {
-                    sout.write("network={\n");
-                    sout.write("        ssid=\"" + ssid + "\"\n");
-                    if (reHexPSK.test(config.networks[ssid].psk) == false) {
-                        // calculate the hex psk
-                        var buff = Crypto.pbkdf2Sync(config.networks[ssid].psk, ssid, 4096, 256, 'sha1');
-                        config.networks[ssid].psk = "";
-                        for (var n = 0; n < 32; n++) {
-                            var code = buff[n].toString(16);
-                            if (code.length < 2) code = "0" + code;
-                            config.networks[ssid].psk += code;
-                        }
-                    }
-                    sout.write("        psk=" + config.networks[ssid].psk + "\n");
-                    sout.write("}\n");
-                }
-                sout.end();
-                ChildProcess.exec('sudo cp ' + folder + 
-                    '/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf', 
-                    (errCopy, stdout, stderr) => {
-                    if (errCopy) {
-                        callback(errCopy);
-                    } else {
-                        callback(null, config);
-                    }
-                    fs.unlink(folder + '/wpa_supplicant.conf', () => {
-                        fs.rmdir(folder, () => {});
-                    });
-                });
+    calculateWpaKey(passphrase) {
+        // calculate the hex psk
+        var buff = Crypto.pbkdf2Sync(passphrase, ssid, 4096, 256, 'sha1');
+        var result = "";
+
+        for (var n = 0; n < 32; n++) {
+            var code = buff[n].toString(16);
+            if (code.length < 2) code = "0" + code;
+            result += code;
+        }
+
+        return result;
+    }
+
+    /**
+     * Writes a configuration to /etc/wpa_supplicant/wpa_supplicant.conf
+     * 
+     * @param {Object} config
+     * 
+     * @memberOf Network
+     */
+    writeConfig(config) {
+        var reHexPSK = /^[0-9a-f]{64}$/;
+        var sout = fs.createWriteStream('/etc/wpa_supplicant/wpa_supplicant.conf');
+        for (var key in config) {
+            if (key != 'networks') {
+                sout.write(key + "=" + config[key] + "\n");
             }
-        });
+        }
+        for (var ssid in config.networks) {
+            sout.write("network={\n");
+            sout.write("\tssid=\"" + ssid + "\"\n");
+            if (reHexPSK.test(config.networks[ssid].psk) == false) {
+                // calculate the hex psk
+                config.networks[ssid].psk = calculateWpaKey(config.networks[ssid].psk);
+            }
+            sout.write("\tpsk=" + config.networks[ssid].psk + "\n");
+            sout.write("}\n");
+        }
+        sout.end();
     }
 
     /**
      * Reads /etc/wpa_supplicant/wpa_supplicant.conf, parses it and
      * returns a representative structure.
      * 
-     * @param {any} callback
+     * @param {function(error, networkList)} callback
      * 
      * @memberOf Network
      */
     getNetworks(callback) {
         callback = callback || function() {};
-        ChildProcess.exec('sudo cat /etc/wpa_supplicant/wpa_supplicant.conf', (error, stdout, stderr) => {
+        fs.readFile('/etc/wpa_supplicant/wpa_supplicant.conf', (error, data) => {
             if (error) {
                 callback(error);
-                this._config = {};
             } else {
-                var lines = stdout.split("\n");
+                var lines = data.toString().split("\n");
                 var inNet = false;
                 var reNetwork = /^\s*network=\{/;
                 var reSSID = /^\s*ssid="([^"]+)"/;
@@ -117,8 +113,8 @@ class Network extends EventEmitter {
     /**
      * Adds a new network to the list in /etc/wpa_supplicant/wpa_supplicant.conf
      * 
-     * @param {any} network
-     * @param {any} callback
+     * @param {Object} network
+     * @param {function(error)} callback
      * 
      * @memberOf Network
      */
@@ -129,7 +125,8 @@ class Network extends EventEmitter {
                 callback(errGetNetworks);
             } else {
                 config.networks[network.ssid] = network;
-                this.writeConfig(config, callback);
+                this.writeConfig(config);
+                callback(null);
             }
         }).bind(this));
     }
@@ -137,8 +134,8 @@ class Network extends EventEmitter {
     /**
      * Removes a network from the list in /etc/wpa_supplicant/wpa_supplicant.conf
      * 
-     * @param {any} ssid
-     * @param {any} callback
+     * @param {string} ssid
+     * @param {function(error)} callback
      * 
      * @memberOf Network
      */
@@ -152,7 +149,8 @@ class Network extends EventEmitter {
                     callback("ERROR: " + ssid + " not found");
                 } else {
                     delete config.networks[ssid];
-                    this.writeConfig(config, callback);
+                    this.writeConfig(config);
+                    callback(null);
                 }
             }
         }).bind(this));
