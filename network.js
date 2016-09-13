@@ -9,28 +9,6 @@ class Network extends EventEmitter {
     }
 
     /**
-     * Calculates the WPA key from a passphrase string
-     * 
-     * @param {string} passphrase
-     * @returns
-     * 
-     * @memberOf Network
-     */
-    calculateWpaKey(passphrase) {
-        // calculate the hex psk
-        var buff = Crypto.pbkdf2Sync(passphrase, ssid, 4096, 256, 'sha1');
-        var result = "";
-
-        for (var n = 0; n < 32; n++) {
-            var code = buff[n].toString(16);
-            if (code.length < 2) code = "0" + code;
-            result += code;
-        }
-
-        return result;
-    }
-
-    /**
      * Writes a configuration to /etc/wpa_supplicant/wpa_supplicant.conf
      * 
      * @param {Object} config
@@ -50,7 +28,7 @@ class Network extends EventEmitter {
             sout.write("\tssid=\"" + ssid + "\"\n");
             if (reHexPSK.test(config.networks[ssid].psk) == false) {
                 // calculate the hex psk
-                config.networks[ssid].psk = calculateWpaKey(config.networks[ssid].psk);
+                config.networks[ssid].psk = Network.calculateWpaKey(config.networks[ssid].psk);
             }
             sout.write("\tpsk=" + config.networks[ssid].psk + "\n");
             sout.write("}\n");
@@ -156,5 +134,29 @@ class Network extends EventEmitter {
         }).bind(this));
     }
 }
+
+
+/**
+ * Calculates the WPA key from a passphrase string
+ * 
+ * @param {string} passphrase
+ * @returns
+ * 
+ * @memberOf Network
+ */
+Network.calculateWpaKey = function(ssid, passphrase) {
+    // calculate the hex psk
+    var buff = Crypto.pbkdf2Sync(passphrase, ssid, 4096, 256, 'sha1');
+    var result = "";
+
+    for (var n = 0; n < 32; n++) {
+        var code = buff[n].toString(16);
+        if (code.length < 2) code = "0" + code;
+        result += code;
+    }
+
+    return result;
+}
+
 
 module.exports = Network;

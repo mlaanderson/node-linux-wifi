@@ -43,7 +43,7 @@ wifi.Config.getNetworks((error, config) => {
 
 wifi.Config.addNetwork({
     ssid: 'MyTopSecretSSID',
-    psk: wifi.Config.calculateWpaKey('MySuperSecretPassword')
+    psk: WiFi.calculateWpaKey('MySuperSecretPassword')
 }, (error) => {
     if (!error) {
         console.log('Success');
@@ -58,6 +58,7 @@ wifi.Config.removeNetwork('MyLameOpenSSID', (error) => {
 ```
 
 ### Changing the WiFi Country
+The country code is a [ISO 3166-1 alpha 2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) code. 
 ```
 const WiFi = require('node-linux-wifi');
 var wifi = new WiFi();

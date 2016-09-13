@@ -1,26 +1,22 @@
 const WiFi = require('.');
+const assert = require('assert');
 
 var wifi = new WiFi("wlan0");
 
 wifi.getInterfaces((error, list) => {
     if (error) {
-        console.log("ERROR getting interface list:", error);
+        assert(false, "ERROR getting interface list: " + error);
     } else {
-        console.log("Wireless Interfaces:");
-        for (var iface of list) {
-            console.log("\t" + iface);
-        }
+        assert(true);
     }
 });
 
+assert('b240ad1394bbd481562186567f027ae107b33512d5e96a9ec8a7823e7178a6e3' == WiFi.calculateWpaKey('Hello', 'World'), 
+    "ERROR: PSK keys are not being calculated correctly");
 
 
 wifi.on('scan_complete', (aps) => {
-    console.log("");
-    console.log("Access Points:");
-    for (var name in aps) {
-        console.log("\t" + name, (100 * aps[name].linkQuality).toFixed(1) + "%", aps[name].level + " dBm");
-    }
+    assert(true);
 });
 
 wifi.Scan();

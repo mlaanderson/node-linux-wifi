@@ -72,4 +72,6 @@ class WiFi extends EventEmitter {
     }
 }
 
+WiFi.calculateWpaKey = Network.calculateWpaKey;
+
 module.exports = WiFi;
