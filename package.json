@@ -1,6 +1,6 @@
 {
   "name": "node-linux-wifi",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Library for handling WiFi scanning and connections in Linux",
   "main": "index.js",
   "scripts": {
