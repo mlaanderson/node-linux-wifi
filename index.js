@@ -1,3 +1,5 @@
+"use strict";
+
 const EventEmitter = require('events');
 const ChildProcess = require('child_process');
 const Scanner = require('./scanner.js');
